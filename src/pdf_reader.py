@@ -10,6 +10,9 @@ logger = logging.getLogger(__name__)
 def extract_papers(intake_dir: str) -> list[dict]:
     """Extract text from all PDFs in intake_dir, preserving page numbers.
 
+    Only files with a .pdf extension are processed. All other files are
+    silently ignored.
+
     Returns a list of dicts with keys: filename, pages, total_pages,
     extraction_success.
     """

@@ -47,55 +47,98 @@ def write_report(
     return str(report_path)
 
 
-def _build_summary_table(responses: list[str]) -> str:
-    """Parse LLM responses to build a Markdown summary table.
+def _parse_papers(responses: list[str]) -> list[dict]:
+    """Parse all papers from LLM responses into structured dicts.
 
-    Falls back to a note if parsing yields no rows.
+    Each dict contains: filename, relevance, reasoning, and raw text.
     """
-    header = "| # | Paper | Relevance | Key Pages |\n|---|-------|-----------|-----------|"
-    rows: list[str] = []
-
-    # Patterns to pull paper name, relevance, and key pages from LLM output.
-    # The LLM is prompted to follow a consistent structure, so these patterns
-    # are intentionally flexible to handle minor formatting variation.
     paper_pattern = re.compile(
-        r"(?:PAPER:|##\s*Paper[:\s]+|###\s*)([^\n]+\.pdf)", re.IGNORECASE
+        r"###\s*Paper:\s*`?([^\n`]+\.pdf)", re.IGNORECASE,
     )
     relevance_pattern = re.compile(
-        r"Relevance(?:\s+rating)?[:\s]+\*{0,2}(High|Medium|Low)\*{0,2}",
+        r"\*\*Relevance rating:\*\*\s*(High|Medium|Low)",
         re.IGNORECASE,
     )
-    pages_pattern = re.compile(
-        r"Key\s+pages?(?:\s+to\s+read)?[:\s]+([^\n]+)", re.IGNORECASE
+    reasoning_pattern = re.compile(
+        r"\*\*Why it's useful:\*\*\s*(.+)", re.IGNORECASE,
     )
 
-    row_num = 1
+    papers = []
     for response in responses:
-        paper_names = paper_pattern.findall(response)
-        relevances = relevance_pattern.findall(response)
-        key_pages_list = pages_pattern.findall(response)
-
-        # Zip found values; use placeholders for missing fields
-        max_entries = max(len(paper_names), len(relevances), len(key_pages_list), 1)
-        for i in range(max_entries):
-            name = paper_names[i].strip() if i < len(paper_names) else "-"
-            relevance = relevances[i].strip() if i < len(relevances) else "-"
-            pages = key_pages_list[i].strip() if i < len(key_pages_list) else "-"
-            # Guard against accidentally empty rows with no real data
-            if name == "-" and relevance == "-":
+        # Split response into individual paper blocks
+        paper_blocks = re.split(r"(?=###\s+Paper:)", response)
+        for block in paper_blocks:
+            block = block.strip()
+            if not block:
                 continue
-            rows.append(f"| {row_num} | {name} | {relevance} | {pages} |")  # noqa: E501
-            row_num += 1
+
+            name_match = paper_pattern.search(block)
+            rel_match = relevance_pattern.search(block)
+            reason_match = reasoning_pattern.search(block)
+
+            if not name_match:
+                continue
+
+            filename = name_match.group(1).strip()
+            relevance = rel_match.group(1).strip() if rel_match else "Low"
+            reasoning = reason_match.group(1).strip() if reason_match else ""
+
+            papers.append({
+                "filename": filename,
+                "relevance": relevance,
+                "reasoning": reasoning,
+                "raw": block,
+            })
+
+    return papers
+
+
+def _build_summary_table(responses: list[str]) -> str:
+    """Build a summary table with High/Medium papers first, then Low.
+
+    Columns: #, Paper, Reasoning
+    """
+    header = "| # | Paper | Reasoning |\n|---|-------|-----------|"
+    papers = _parse_papers(responses)
+
+    # Sort: High/Medium first, then Low
+    relevance_order = {"High": 0, "Medium": 1, "Low": 2}
+    papers.sort(key=lambda p: relevance_order.get(p["relevance"], 3))
+
+    rows = []
+    for i, paper in enumerate(papers, 1):
+        reasoning = paper["reasoning"] if paper["relevance"] in ("High", "Medium") else "-"
+        rows.append(f"| {i} | {paper['filename']} | {reasoning} |")
 
     if not rows:
         return (
             f"{header}\n"
-            "| - | *(Could not parse summary - see Detailed Evaluations below)* | - | - |"
+            "| - | *(Could not parse summary - see Detailed Evaluations below)* | - |"
         )
 
     return header + "\n" + "\n".join(rows)
 
 
 def _build_detailed_section(responses: list[str]) -> str:
-    """Concatenate batch responses separated by horizontal rules."""
-    return "\n\n---\n\n".join(response.strip() for response in responses)
+    """Concatenate paper evaluations, sorted with High/Medium first, then Low.
+
+    Normalizes paper headers to a consistent format.
+    """
+    papers = _parse_papers(responses)
+
+    # Sort: High/Medium first, then Low
+    relevance_order = {"High": 0, "Medium": 1, "Low": 2}
+    papers.sort(key=lambda p: relevance_order.get(p["relevance"], 3))
+
+    # Normalize headers in raw text
+    header_pattern = re.compile(
+        r"^(#{1,3}\s*)?(?:\*\*)?PAPER[:\s]+\*{0,2}\s*(.+?\.pdf)\s*\*{0,2}\s*$",
+        re.MULTILINE | re.IGNORECASE,
+    )
+
+    sections = []
+    for paper in papers:
+        cleaned = header_pattern.sub(r"### Paper: \2", paper["raw"])
+        sections.append(cleaned.strip())
+
+    return "\n\n---\n\n".join(sections)

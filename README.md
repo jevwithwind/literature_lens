@@ -96,13 +96,20 @@ Open `prompts/research.md` and fill in:
 ```bash
 cp ~/Downloads/*.pdf intake/
 ```
+> Only `.pdf` files are processed. Any other file types in `intake/` are silently ignored.
 
 **6. Run the pipeline**
 ```bash
 python main.py
 ```
 
-**7. Find your report in `output/`**
+**7. Clean up processed PDFs (optional)**
+```bash
+python clean.py
+```
+This deletes all PDFs from `intake/` so you can start fresh for the next batch.
+
+**8. Find your report in `output/`**
 ```
 output/report_20260412_143022.md
 ```
@@ -144,41 +151,42 @@ Reports are saved as `output/report_YYYYMMDD_HHMMSS.md` and look like this:
 > Investigating the effect of retrieval-augmented generation on ...
 
 ## Summary Table
-| # | Paper | Relevance | Key Pages |
-|---|-------|-----------|-----------|
-| 1 | smith_2024_rag_survey.pdf | High | 3, 7–9, 14 |
-| 2 | jones_2023_attention.pdf | Medium | 5, 11 |
-| 3 | brown_2022_scaling.pdf | Low | - |
+| # | Paper | Reasoning |
+|---|-------|-----------|
+| 1 | smith_2024_rag_survey.pdf | Directly surveys RAG architectures with a focus on ... |
+| 2 | jones_2023_attention.pdf | Provides foundational PEAD analysis relevant to ... |
+| 3 | brown_2022_scaling.pdf | - |
+
+> Papers are sorted by relevance: High and Medium relevance papers appear first, followed by Low relevance papers.
 
 ## Detailed Evaluations
 
-### smith_2024_rag_survey.pdf
-**Relevance**: High
-**Why it's useful**: Directly surveys RAG architectures with a focus on ...
-**Key pages**: 3, 7–9, 14
-**Key findings**:
-- Retrieval step accounts for 40% of end-to-end latency in production pipelines
-- Hybrid dense-sparse retrieval outperforms either approach alone on BEIR
-- Re-ranking with a cross-encoder closes most of the remaining quality gap
-**Methodology & data**: Benchmarks seven open-source RAG systems on the BEIR
+### Paper: smith_2024_rag_survey.pdf
+- **Relevance rating:** High
+- **Why it's useful:** Directly surveys RAG architectures with a focus on ...
+- **Key pages to read:** 3, 7–9, 14
+- **Key findings:**
+  - Retrieval step accounts for 40% of end-to-end latency in production pipelines
+  - Hybrid dense-sparse retrieval outperforms either approach alone on BEIR
+  - Re-ranking with a cross-encoder closes most of the remaining quality gap
+- **Methodology & data:** Benchmarks seven open-source RAG systems on the BEIR
 dataset (18 retrieval tasks). Uses a standardised evaluation harness with NDCG@10
 as the primary metric. All experiments run on a single A100 node.
 
 ---
 
-### jones_2023_attention.pdf
-**Relevance**: Medium
-**Why it's useful**: ...
-**Key pages**: 5, 11
-**Key findings**:
-- ...
+### Paper: jones_2023_attention.pdf
+- **Relevance rating:** Medium
+- **Why it's useful:** ...
+- **Key pages to read:** 5, 11
+- **Key findings:**
+  - ...
 
 ---
 
-### brown_2022_scaling.pdf
-**Relevance**: Low
-**Key findings**:
-- ...
+### Paper: brown_2022_scaling.pdf
+- **Relevance rating:** Low
+- **Why not relevant:** Focuses on scaling laws for language models without addressing retrieval-augmented generation or the specific research questions.
 ```
 
 **Evaluation fields by relevance level:**
@@ -188,8 +196,9 @@ as the primary metric. All experiments run on a single A100 node.
 | Relevance rating | yes | yes | yes |
 | Why it's useful | yes | yes | |
 | Key pages to read | yes | yes | |
-| Key findings (3) | yes | yes | yes |
+| Key findings (3) | yes | yes | |
 | Methodology & data | yes | yes | |
+| Why not relevant | | | yes |
 
 ---
 
