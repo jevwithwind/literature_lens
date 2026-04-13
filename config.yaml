@@ -12,5 +12,5 @@ batch:
 
 paths:
   intake_dir: "./intake"
-  prompt_file: "./prompts/research_angle.md"
+  prompt_file: "./prompts/research.md"
   output_dir: "./output"

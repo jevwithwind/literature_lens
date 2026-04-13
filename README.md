@@ -85,10 +85,12 @@ LLM_MODEL=qwen3.6-plus
 
 **4. Edit your research angle**
 
-Open `prompts/research_angle.md` and fill in:
+Open `prompts/research.md` and fill in:
 - Your research focus and questions
 - Your dataset or methodology
 - What kinds of findings or methods you're looking for
+
+> 💡 See `prompts/research.example.md` for a filled-in template you can use as a reference.
 
 **5. Drop PDFs into `intake/`**
 ```bash
