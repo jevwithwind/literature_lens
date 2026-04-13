@@ -29,3 +29,4 @@ Thumbs.db
 # Application specific
 intake/*.pdf
 output/report_*.md
+prompts/research.md
