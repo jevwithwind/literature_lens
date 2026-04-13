@@ -1,0 +1,16 @@
+api:
+  base_url_env: "OPENAI_BASE_URL"   # set this in your .env file
+  model_env: "LLM_MODEL"            # set this in your .env file
+  api_key_env: "DASHSCOPE_API_KEY"  # set this in your .env file
+  max_tokens: 4096
+  temperature: 0.3
+  max_concurrent_requests: 3    # semaphore limit for async calls
+
+batch:
+  max_papers_per_batch: 5
+  max_tokens_per_batch: 60000   # stay well under model context window
+
+paths:
+  intake_dir: "./intake"
+  prompt_file: "./prompts/research_angle.md"
+  output_dir: "./output"
